@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -e
+
+WATCHER_PID=""
+
+if [ -n "$STATSD_HOSTNAME" ]; then
+  printf "Starting rabbitmq statsd watcher..."
+  rabbitmq-watcher --host $STATSD_HOSTNAME &
+  WATCHER_PID=$!
+  if [ -z $? ]; then
+    echo "failed"
+  else
+    echo ""
+  fi
+fi
+
+rabbitmq-server
+
+if [ -n "$WATCHER_PID" ]; then
+  echo "Stopping rabbitmq statsd watcher"
+  kill $WATCHER_PID 2> /dev/null
+fi
+

@@ -8,3 +8,11 @@ ENV HOME $RABBITMQ_HOME
 RUN rabbitmq-plugins enable --offline $RABBITMQ_PLUGINS
 
 EXPOSE 15672
+
+RUN apt-get update && apt-get install -y ruby python --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+COPY bin/rabbitmqadmin /usr/local/bin/
+COPY bin/rabbitmq-watcher /usr/local/bin/
+COPY bin/rabbitmq-server-watcher /usr/local/bin/
+
+CMD ["rabbitmq-server-watcher"]
