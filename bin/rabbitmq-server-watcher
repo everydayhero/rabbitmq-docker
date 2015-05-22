@@ -2,23 +2,26 @@
 
 set -e
 
-WATCHER_PID=""
+RABBITMQ_PORT=5672
 
 if [ -n "$STATSD_HOST" ]; then
-  printf "Starting rabbitmq statsd watcher..."
-  rabbitmq-watcher --host $STATSD_HOST &
-  WATCHER_PID=$!
+  rabbitmq-server &
+
   if [ -z $? ]; then
-    echo "failed"
-  else
-    echo ""
+    echo "rabbitmq failed to start"
+    exit 1
   fi
-fi
 
-rabbitmq-server
+  echo "waiting for rabbitmq to start"
+  while ! nc -z localhost $RABBITMQ_PORT; do
+    sleep 0.1 # wait for 1/10 of the second before check again
+  done
 
-if [ -n "$WATCHER_PID" ]; then
-  echo "Stopping rabbitmq statsd watcher"
-  kill $WATCHER_PID 2> /dev/null
+  rabbitmq-watcher --host $STATSD_HOST
+  if [ $? -ne 0 ]; then
+    echo "rabbitmq watcher failed to start"
+  fi
+else
+  rabbitmq-server
 fi
 
